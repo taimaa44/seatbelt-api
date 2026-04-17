@@ -40,7 +40,7 @@ def load_all():
     download_if_needed(MODEL_URL, MODEL_PATH)
 
     print("Loading model...")
-    model = tf.keras.models.load_model(MODEL_PATH)
+    model = tf.keras.models.load_model(MODEL_PATH, compile=False)    
     print("Model loaded!")
 
     # تحميل أسماء الكلاسات
