@@ -23,7 +23,7 @@ def download_if_needed(file_id, output_path):
     if not os.path.exists(output_path):
         url = f"https://drive.google.com/uc?id={file_id}"
         print(f"Downloading {output_path}...")
-        gdown.download(url, output_path, quiet=False)
+        gdown.download(id=file_id, output=output_path, quiet=False)
 
 
 def load_all():
