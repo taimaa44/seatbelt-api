@@ -1,5 +1,5 @@
 import os
-import gdown
+import requests
 import numpy as np
 import tensorflow as tf
 
@@ -7,47 +7,38 @@ MODEL_DIR = "models"
 
 MODEL_PATH = os.path.join(MODEL_DIR, "model.keras")
 CLASS_NAMES_PATH = os.path.join(MODEL_DIR, "classes.txt")
-THRESHOLD_PATH = os.path.join(MODEL_DIR, "threshold.npy")
 
-# IDs تبعونك
-MODEL_FILE_ID = "1yGWDyu5IrmAcr4xnWAJ22novIZLYBnV-"
-CLASS_NAMES_FILE_ID = "1GF4ZVMGWthIsl9b8IWEVo6ZFimFHPgnD"
-THRESHOLD_FILE_ID = "1roqiZPCk0OnJ1bWOjAeWJ8bc5fB_Vj1_"
+# رابط الموديل من HuggingFace
+MODEL_URL = "https://huggingface.co/taimaa47/seatbelt-model/resolve/main/seatbelt_classifier_final.keras"
 
-model = None
-class_names = None
-threshold = None
-
-
-def download_if_needed(file_id, output_path):
+def download_if_needed(url, output_path):
     if not os.path.exists(output_path):
-        url = f"https://drive.google.com/uc?id={file_id}"
-        print(f"Downloading {output_path}...")
-        gdown.download(id=file_id, output=output_path, quiet=False)
+        print("Downloading model...")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        r = requests.get(url)
+        with open(output_path, "wb") as f:
+            f.write(r.content)
 
+# تحميل الموديل إذا مش موجود
+download_if_needed(MODEL_URL, MODEL_PATH)
 
-def load_all():
-    global model, class_names, threshold
+# تحميل الموديل
+model = tf.keras.models.load_model(MODEL_PATH)
 
-    if model is not None:
-        return model, class_names, threshold
-
-    os.makedirs(MODEL_DIR, exist_ok=True)
-
-    download_if_needed(MODEL_FILE_ID, MODEL_PATH)
-    download_if_needed(CLASS_NAMES_FILE_ID, CLASS_NAMES_PATH)
-    download_if_needed(THRESHOLD_FILE_ID, THRESHOLD_PATH)
-
-    print("Loading model...")
-    model = tf.keras.models.load_model(MODEL_PATH, compile=False)
-
+# تحميل أسماء الكلاسات
+if os.path.exists(CLASS_NAMES_PATH):
     with open(CLASS_NAMES_PATH, "r") as f:
-        class_names = [line.strip() for line in f]
+        class_names = [line.strip() for line in f.readlines()]
+else:
+    class_names = ["no_seatbelt", "seatbelt"]  # fallback
 
-    threshold = float(np.load(THRESHOLD_PATH))
+def predict(image_array):
+    image_array = np.expand_dims(image_array, axis=0)
+    predictions = model.predict(image_array)
+    class_index = np.argmax(predictions)
+    confidence = float(np.max(predictions))
 
-    print("Model loaded")
-    print("Classes:", class_names)
-    print("Threshold:", threshold)
-
-    return model, class_names, threshold
+    return {
+        "class": class_names[class_index],
+        "confidence": confidence
+    }
