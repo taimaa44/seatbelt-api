@@ -9,8 +9,7 @@ MODEL_PATH = os.path.join(MODEL_DIR, "model.keras")
 CLASS_NAMES_PATH = os.path.join(MODEL_DIR, "classes.txt")
 
 # رابط الموديل من HuggingFace
-MODEL_URL = "https://huggingface.co/taimaa47/seatbelt-model/resolve/main/seatbelt_classifier_final.keras"
-
+MODEL_URL = "https://huggingface.co/taimaa47/seatbelt-model/resolve/main/seatbelt_classifier_final.keras?download=true"
 def download_if_needed(url, output_path):
     if not os.path.exists(output_path):
         print("Downloading model...")
